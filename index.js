@@ -3,23 +3,100 @@
 var http = require("http");
 var express = require('express');
 var app = express();
-var mysql      = require('mysql');
+var mysql = require('mysql');
 var bodyParser = require('body-parser');
 
 //Connecting to Database
+
 var connection = mysql.createConnection({
-    host     : 'localhost',
-    user     : 'root',
-    password : '',
-    database : 'adtech'
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'adtech'
 });
 
-connection.connect(function(err) {
-    if (err) { throw err }// internal log file capture
+connection.connect(function (err) {
+    if (err) {
+        throw err
+    }// internal log file capture
     console.log('You are now connected with mysql database...')
+//Creation of DB
+    connection.query('Create Database adtech',
+        function (error, results, fields) {
+            if (error) {
+                console.log(error.sqlMessage)
+
+            } else {
+                console.log("Database adtech Created")
+            }
+        });
+
+//Creation of Tables
+    connection.query('CREATE TABLE deliver (' +
+        '  ID int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,' +
+        '  AdsID int(11) NOT NULL,' +
+        '  DeliveryID varchar(50) NOT NULL UNIQUE KEY,' +
+        '  Time timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),' +
+        '  Browser varchar(50) NOT NULL,' +
+        '  OS varchar(50) NOT NULL,' +
+        '  Site varchar(50) NOT NULL' +
+        ') ',
+        function (error, results, fields) {
+            if (error) {
+                console.log(error.sqlMessage)
+
+            } else {
+                console.log("Deliver Table Created")
+            }
+        });
+
+    connection.query('CREATE TABLE click (' +
+        '  ID int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,' +
+        '  DeliveryID int(11) NOT NULL,' +
+        '  ClickTime timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()\n' +
+        ') ',
+        function (error, results, fields) {
+            if (error) {
+                console.log(error.sqlMessage)
+
+            } else {
+                console.log("Click Table Created")
+            }
+        });
+
+    connection.query('CREATE TABLE install (' +
+        '  ID int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,' +
+        '  ClickID int(11) NOT NULL,' +
+        '  InstallTime timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()\n' +
+        ') ',
+        function (error, results, fields) {
+            if (error) {
+                console.log(error.sqlMessage)
+
+            } else {
+                console.log("Install Table Created")
+            }
+        });
+
+    connection.query('CREATE TABLE log (' +
+        '  ID int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,' +
+        '  Action varchar(10) NOT NULL,' +
+        '  Time timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),' +
+        '  StatusCode int(11) NOT NULL,' +
+        '  Message varchar(200) NOT NULL' +
+        ') ',
+        function (error, results, fields) {
+            if (error) {
+                console.log(error.sqlMessage)
+
+            } else {
+                console.log("Log Table Created")
+            }
+        });
+
 })
 
-app.use( bodyParser.json() );       // to support JSON-encoded bodies
+app.use(bodyParser.json());       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
     extended: true
 }));
@@ -36,62 +113,64 @@ var server = app.listen(3000, "127.0.0.1", function () {
 //Delivery event handling
 
 app.post('/ads/delivery', function (req, res) {
-    var params  = req.body;
+    var params = req.body;
     console.log(params);
 // Checking passed value is null or not
 
-    if(req.body.advertisementId == null || req.body.deliveryId == null || req.body.time == null ||
+    if (req.body.advertisementId == null || req.body.deliveryId == null || req.body.time == null ||
         req.body.browser == null || req.body.os == null || req.body.site == null ||
         req.body.advertisementId == "" || req.body.deliveryId == "" || req.body.time == "" ||
-        req.body.browser == "" || req.body.os == "" || req.body.site == "")
-    {
-        res.status(500).json({ message: "Values should be Mandatory" });
+        req.body.browser == "" || req.body.os == "" || req.body.site == "") {
+        res.status(500).json({message: "Values should be Mandatory"});
     }
 // Marking entry in Deliver table
 
     connection.query('INSERT INTO deliver (`ID`, `AdsID`, `DeliveryID`, `Time`, `Browser`, `OS`, `Site`) ' +
         'VALUES  (NULL,?,?,?,?,?,?)',
-        [req.body.advertisementId,req.body.deliveryId,req.body.time,req.body.browser,req.body.os,req.body.site],
+        [req.body.advertisementId, req.body.deliveryId, req.body.time, req.body.browser, req.body.os, req.body.site],
 //   Handling error and pushing the details in log table
 
-             function (error, results, fields) {
-            if (error) {
-                connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
-                    'VALUES  (NULL,"Deliver" , current_timestamp() ,?,?)', [500,error.sqlMessage ]);
-              res.status(500).json({ message: error.sqlMessage });
-            } else {
-               connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
-                    'VALUES  (NULL,"Deliver" , current_timestamp() ,?,"Deliver Successful")', [200]);
-                res.status(200).json({ message: "Successful Deliver" });
-            }
-
-    });
-});
-//Click event handling
-
-app.post('/ads/click', function (req, res) {
-    var params  = req.body;
-    console.log(params);
-// Checking passed value is null or not
-
-    if(req.body.deliveryId == null || req.body.deliveryId == "")
-    {
-        res.status(500).json({ message: "DeliveryID should be Mandatory for this Call" });
-    }
- // Checking the passed DeliveryID exists in Deliver table
-
-    connection.query('select ID from deliver where DeliveryID =?',req.body.deliveryId,
         function (error, results, fields) {
             if (error) {
                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                     'VALUES  (NULL,"Deliver" , current_timestamp() ,?,?)', [500, error.sqlMessage]);
+                //res.end(JSON.stringify(error));
+                res.status(500).json({message: error.sqlMessage});
+            } else {
+                // res.end(JSON.stringify(results));
+                connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
+                    'VALUES  (NULL,"Deliver" , current_timestamp() ,?,"Deliver Successful")', [200]);
+                res.status(200).json({message: "Successful Deliver"});
+            }
+
+        });
+});
+//Click event handling
+
+app.post('/ads/click', function (req, res) {
+    var params = req.body;
+    console.log(params);
+// Checking passed value is null or not
+
+    if (req.body.deliveryId == null || req.body.deliveryId == "") {
+        res.status(500).json({message: "DeliveryID should be Mandatory for this Call"});
+    }
+    // Checking the passed DeliveryID exists in Deliver table
+
+    connection.query('select ID from deliver where DeliveryID =?', req.body.deliveryId,
+        function (error, results, fields) {
+            if (error) {
+                connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
+                    'VALUES  (NULL,"Deliver" , current_timestamp() ,?,?)', [500, error.sqlMessage]);
+                //res.end(JSON.stringify(error));
                 res.status(500).json({message: error.sqlMessage});
             } else {
                 var len = results.length;
-                  if (len == 0) {
+                if (len == 0) {
                     connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                         'VALUES  (NULL,"Deliver" , current_timestamp() ,?,"never received the given delivery:?")', [404, req.body.deliveryId]);
-                   res.status(404).json({message: "never received the given delivery:" + req.body.deliveryId});
+                    //res.end(JSON.stringify(error));
+                    res.status(404).json({message: "never received the given delivery:" + req.body.deliveryId});
                 } else {
 // Marking entry in click table
 
@@ -104,8 +183,10 @@ app.post('/ads/click', function (req, res) {
 
                                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                                     'VALUES  (NULL,"Click" , current_timestamp() ,?,?)', [500, error.sqlMessage]);
-                               res.status(500).json({message: error.sqlMessage});
+                                //res.end(JSON.stringify(error));
+                                res.status(500).json({message: error.sqlMessage});
                             } else {
+                                // res.end(JSON.stringify(results));
                                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                                     'VALUES  (NULL,"Click" , current_timestamp() ,?,"Click Successful")', [200]);
                                 res.status(200).json({message: "Successful Click"});
@@ -125,9 +206,8 @@ app.post('/ads/install', function (req, res) {
     console.log(params);
 // Checking passed value is null or not
 
-    if(req.body.deliveryId == null || req.body.deliveryId == "")
-    {
-        res.status(500).json({ message: "DeliveryID should be Mandatory for this Call" });
+    if (req.body.deliveryId == null || req.body.deliveryId == "") {
+        res.status(500).json({message: "DeliveryID should be Mandatory for this Call"});
     }
 // Checking the passed DeliveryID exists in Deliver table
     connection.query('select C.ID from deliver D join click C on D.ID=C.DeliveryID where D.DeliveryID =?', req.body.deliveryId,
@@ -135,13 +215,15 @@ app.post('/ads/install', function (req, res) {
             if (error) {
                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                     'VALUES  (NULL,"Click" , current_timestamp() ,?,?)', [500, error.sqlMessage]);
-                     res.status(500).json({message: error.sqlMessage});
+                //res.end(JSON.stringify(error));
+                res.status(500).json({message: error.sqlMessage});
             } else {
                 var len = results.length;
                 if (len == 0) {
                     connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                         'VALUES  (NULL,"Click" , current_timestamp() ,?,"never received the given click:?")', [404, req.body.clickId]);
-                        res.status(404).json({message: "never received the given click:" + req.body.deliveryId});
+                    //res.end(JSON.stringify(error));
+                    res.status(404).json({message: "never received the given click:" + req.body.deliveryId});
                 } else {
 // Marking entry in Install table
 
@@ -153,9 +235,11 @@ app.post('/ads/install', function (req, res) {
 //   Handling error and pushing the details in log table
                                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                                     'VALUES  (NULL,"Install" , current_timestamp() ,?,?)', [500, error.sqlMessage]);
-                                 res.status(500).json({message: error.sqlMessage});}
-                            else {
-                                  connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
+                                //res.end(JSON.stringify(error));
+                                res.status(500).json({message: error.sqlMessage});
+                            } else {
+                                // res.end(JSON.stringify(results));
+                                connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                                     'VALUES  (NULL,"Install" , current_timestamp() ,?,"Install Successful")', [200]);
                                 res.status(200).json({message: "Successful Install"});
 
@@ -172,82 +256,83 @@ app.post('/ads/install', function (req, res) {
 
 app.get('/ads/statistics', function
     (req, res) {
-// Checking passed value is null or not
 
-    if(req.query.start == null || req.query.end==null || req.query.start == "" || req.query.end=="")
-    {
-        res.status(500).json({ message: "Date Values cannot be Empty" });
-    }
     console.log(req.query.start);
     console.log(req.query.end);
     var str1 = "";
     var str2 = "";
 //Verifying the Groupby Arguments are not null
 
-    if(req.query.groupby != null) {
+    if (req.query.groupby != null) {
 
         var isarray = Array.isArray(req.query.groupby);
+        var arr;
+
         if (isarray == true) {
-
-            var arr = req.query.groupby;
-
-            var i = 0;
-            for (var grpby in arr) {
-//Defining Groupby Value list to feeded with
-
-                var arrgroupby = ["browser", "os", "site"];
-                if(!arrgroupby.includes(arr[grpby].toLowerCase()))
-                {
-                    res.status(500).json({ message: "Incorrect filter selection" });
-                }
-                str1 += "M." + arr[grpby] + ",";
-                if (i == arr.length - 1) {
-                    str2 += "M." + arr[grpby];
-                } else {
-                    str2 += "M." + arr[grpby] + ",";
-                    i++;
-                }
-            }
+            arr = req.query.groupby;
         } else {
-
-            str1 = "M." + req.query.groupby + ",";
-            str2 = "M." + req.query.groupby;
+            arr = req.query.groupby.split(",");
         }
+
+
     }
 //Dynamic Query building on Groupby
-    var qry = "select "+ str1 +" count(distinct od.ID) as deliver, " +
-        "count(distinct oc.ID) as click, count(distinct oi.id) as install "+
-    "from (select d.Browser, d.Site, d.OS, d.ID as deliverid, c.ID as clickid, i.ID as installid  "+
-    "from  deliver d left join click c on d.ID = C.DeliveryId left join install i on c.ID = i.clickID) M "+
-    "Left join deliver od on od.ID = M.deliverid and od.time between ? and ? "+
-    "Left join click oc on oc.ID = M.clickid and oc.clicktime  between ? and ? "+
-    "Left join install oi on oi.ID = M.installid and oi.installtime between ? and ? ";
 
-    if(str2 != "")
-        qry = qry + " group by "+ str2;
-console.log(qry);
+    var condition = "";
+    var i = 0;
+    for (var grpby in arr) {
+//Defining Groupby Value list to fed with
+
+        var arrgroupby = ["browser", "os", "site"];
+        if (!arrgroupby.includes(arr[grpby].toLowerCase())) {
+            res.status(500).json({message: "Incorrect filter selection : " + arr[grpby]});
+        }
+        str1 += "M." + arr[grpby] + ",";
+        if (i == arr.length - 1) {
+            str2 += "M." + arr[grpby];
+        } else {
+            str2 += "M." + arr[grpby] + ",";
+            i++;
+        }
+    }
+
+
+    if ((req.query.start != null && req.query.start != "") && (req.query.end != null && req.query.end != "")) {
+        condition = "between '" + req.query.start + "' and '" + req.query.end + "' ";
+    } else if ((req.query.start != null && req.query.start != "") && (req.query.end == null || req.query.end == "")) {
+        condition = " >= '" + req.query.start + "'";
+    } else if ((req.query.start == null || req.query.start == "") && (req.query.end != null && req.query.end != "")) {
+        condition = " <= '" + req.query.end + "'";
+    }
+
+
+    var qry = "select " + str1 + " count(distinct od.ID) as deliver, " +
+        "count(distinct oc.ID) as click, count(distinct oi.id) as install " +
+        "from (select d.Browser, d.Site, d.OS, d.ID as deliverid, c.ID as clickid, i.ID as installid  " +
+        "from  deliver d left join click c on d.ID = C.DeliveryId left join install i on c.ID = i.clickID) M " +
+        "Left join deliver od on od.ID = M.deliverid and od.time " + condition +
+        "Left join click oc on oc.ID = M.clickid and oc.clicktime " + condition +
+        "Left join install oi on oi.ID = M.installid and oi.installtime " + condition;
+
+    if (str2 != "")
+        qry = qry + " group by " + str2;
+    console.log(qry);
     connection.query(qry,
         [req.query.start, req.query.end, req.query.start, req.query.end, req.query.start, req.query.end],
 
         function (error, results, fields) {
-//   Handling error and pushing the details in log table
+//Handling error and pushing the details in log table
 
             if (error) {
                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
-                    'VALUES  (NULL,"Statistics" , current_timestamp() ,?,?)', [500, error.sqlMessage]);
-                             res.status(500).json({message: error.sqlMessage});
+                    'VALUES  (NULL,"Click" , current_timestamp() ,?,?)', [500, error.sqlMessage]);
+                //res.end(JSON.stringify(error));
+                res.status(500).json({message: error.sqlMessage});
             } else {
                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
-                    'VALUES  (NULL,"Statistics" , current_timestamp() ,?,"Statics loaded Successful")', [200]);
-//Handling the results based on Groupby Condition
-                var result;
-                if(req.query.groupby !=null)
-                {
-                    result=results;
-                }
-                else {
-                    result=results[0];
-                }
+                    'VALUES  (NULL,"Deliver" , current_timestamp() ,?,"Statics loaded Successful")', [200]);
+                //Handling the results based on Groupby Condition
+                result = (req.query.groupby != null) ? results : results[0];
                 var jsonObj = {
                     "Interval": {
                         "start": req.query.start,
@@ -256,7 +341,7 @@ console.log(qry);
                     "stats": result
                 }
                 res.status(200).json(jsonObj);
-                  }
+            }
         }
     )
 });
