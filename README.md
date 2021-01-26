@@ -1,2 +1,4 @@
 # AdTech
-Phase
+
+npm install
+node index
