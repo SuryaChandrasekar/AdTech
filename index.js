@@ -58,11 +58,9 @@ app.post('/ads/delivery', function (req, res) {
             if (error) {
                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                     'VALUES  (NULL,"Deliver" , current_timestamp() ,?,?)', [500,error.sqlMessage ]);
-                //res.end(JSON.stringify(error));
-                res.status(500).json({ message: error.sqlMessage });
+              res.status(500).json({ message: error.sqlMessage });
             } else {
-               // res.end(JSON.stringify(results));
-                connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
+               connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                     'VALUES  (NULL,"Deliver" , current_timestamp() ,?,"Deliver Successful")', [200]);
                 res.status(200).json({ message: "Successful Deliver" });
             }
@@ -87,15 +85,13 @@ app.post('/ads/click', function (req, res) {
             if (error) {
                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                     'VALUES  (NULL,"Deliver" , current_timestamp() ,?,?)', [500, error.sqlMessage]);
-                //res.end(JSON.stringify(error));
                 res.status(500).json({message: error.sqlMessage});
             } else {
                 var len = results.length;
                   if (len == 0) {
                     connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                         'VALUES  (NULL,"Deliver" , current_timestamp() ,?,"never received the given delivery:?")', [404, req.body.deliveryId]);
-                    //res.end(JSON.stringify(error));
-                    res.status(404).json({message: "never received the given delivery:" + req.body.deliveryId});
+                   res.status(404).json({message: "never received the given delivery:" + req.body.deliveryId});
                 } else {
 // Marking entry in click table
 
@@ -108,10 +104,8 @@ app.post('/ads/click', function (req, res) {
 
                                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                                     'VALUES  (NULL,"Click" , current_timestamp() ,?,?)', [500, error.sqlMessage]);
-                                //res.end(JSON.stringify(error));
-                                res.status(500).json({message: error.sqlMessage});
+                               res.status(500).json({message: error.sqlMessage});
                             } else {
-                                // res.end(JSON.stringify(results));
                                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                                     'VALUES  (NULL,"Click" , current_timestamp() ,?,"Click Successful")', [200]);
                                 res.status(200).json({message: "Successful Click"});
@@ -141,15 +135,13 @@ app.post('/ads/install', function (req, res) {
             if (error) {
                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                     'VALUES  (NULL,"Click" , current_timestamp() ,?,?)', [500, error.sqlMessage]);
-                //res.end(JSON.stringify(error));
-                res.status(500).json({message: error.sqlMessage});
+                     res.status(500).json({message: error.sqlMessage});
             } else {
                 var len = results.length;
                 if (len == 0) {
                     connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                         'VALUES  (NULL,"Click" , current_timestamp() ,?,"never received the given click:?")', [404, req.body.clickId]);
-                    //res.end(JSON.stringify(error));
-                    res.status(404).json({message: "never received the given click:" + req.body.deliveryId});
+                        res.status(404).json({message: "never received the given click:" + req.body.deliveryId});
                 } else {
 // Marking entry in Install table
 
@@ -161,11 +153,9 @@ app.post('/ads/install', function (req, res) {
 //   Handling error and pushing the details in log table
                                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                                     'VALUES  (NULL,"Install" , current_timestamp() ,?,?)', [500, error.sqlMessage]);
-                                //res.end(JSON.stringify(error));
-                                res.status(500).json({message: error.sqlMessage});}
+                                 res.status(500).json({message: error.sqlMessage});}
                             else {
-                                // res.end(JSON.stringify(results));
-                                connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
+                                  connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
                                     'VALUES  (NULL,"Install" , current_timestamp() ,?,"Install Successful")', [200]);
                                 res.status(200).json({message: "Successful Install"});
 
@@ -244,12 +234,11 @@ console.log(qry);
 
             if (error) {
                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
-                    'VALUES  (NULL,"Click" , current_timestamp() ,?,?)', [500, error.sqlMessage]);
-                //res.end(JSON.stringify(error));
-                res.status(500).json({message: error.sqlMessage});
+                    'VALUES  (NULL,"Statistics" , current_timestamp() ,?,?)', [500, error.sqlMessage]);
+                             res.status(500).json({message: error.sqlMessage});
             } else {
                 connection.query('INSERT INTO log (`ID`, `Action`,`Time`, `StatusCode`, `Message`) ' +
-                    'VALUES  (NULL,"Deliver" , current_timestamp() ,?,"Statics loaded Successful")', [200]);
+                    'VALUES  (NULL,"Statistics" , current_timestamp() ,?,"Statics loaded Successful")', [200]);
 //Handling the results based on Groupby Condition
                 var result;
                 if(req.query.groupby !=null)
@@ -267,10 +256,7 @@ console.log(qry);
                     "stats": result
                 }
                 res.status(200).json(jsonObj);
-
-                //res.status(200).json ("{ interval :'\n' { Start:" + start +" End:" + end + "}'\n',"+
-                //"{ Stats : {" + JSON.stringify(stats) + "}}");
-            }
+                  }
         }
     )
 });
