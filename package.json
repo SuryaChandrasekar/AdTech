@@ -4,11 +4,8 @@
   "version": "1.0.0",
   "author": "Surya Chandrasekaran",
   "license": "MIT",
-  "repository": "https://github.com/SuryaChandrasekar/AdTech.git",
-  "scripts": {
-    "test": "NODE_ENV=test mocha src/**/*.test-*.js --exit",
-    "coverage": "nyc npm test"
-  },
+  "repository": "https://github.com/SuryaChandrasekar/AdTech.git"
+},
   "dependencies": {
     "config": "^3.0.1",
     "express": "^4.16.4",
