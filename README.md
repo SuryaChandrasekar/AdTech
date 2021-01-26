@@ -7,7 +7,7 @@ mysql: v2.18.1 (Please Install XAMPP)
 postman: Latest Version
 
 ## Usage
-Step 1: Using XAMPP, Start mysql.
+Step 1: Using XAMPP, Start mysql and Apache.
 Step 2: Access the code from git by running out 'git clone https://github.com/SuryaChandrasekar/AdTech.git'
 Step 3: Move to the cloned directory and run 'npm install'
 Step 4: run 'node index'
