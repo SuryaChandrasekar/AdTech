@@ -8,7 +8,7 @@ postman: Latest Version
 
 ## Usage
 Step 1: Using XAMPP, Start mysql.
-Step 2: Access the code from git by running out 'git clone '
+Step 2: Access the code from git by running out 'git clone https://github.com/SuryaChandrasekar/AdTech.git'
 Step 3: Move to the cloned directory and run 'npm install'
 Step 4: run 'node index'
 Step 5: Open postman and drive the test on required request in Adtech collection with input parameter mentiones as per api document shared.
